@@ -45,21 +45,18 @@ client.on('message', (message) => {
         .then(str => parser.parseFromString(str, "text/xml"))
         .then(data => {
           const links = data.getElementsByTagName('link');
-          var updated = 0;
           for(i = 1; i < links.length; i++) {
             if(args[0] in mangaDict) {
               if(links[i].textContent === mangaDict[args[0]]) {
-                updated = 1;
                 message.reply(`A new chapter of \`${args[0]}\` has been released.`);
-                break;
+                return;
               }
             } else {
-              updated = -1;
               message.reply(`\`${args[0]}\` not found in manga dictionary.`);
-              break;
+              return;
             }
           }
-          if(!updated) message.reply(`No new chapter of \`${args[0]}\` has been released.`);
+          message.reply(`No new chapter of \`${args[0]}\` has been released.`);
         });
       } else {
         message.channel.send('Invalid command. The command format should be: `$check <manga-name>`')
