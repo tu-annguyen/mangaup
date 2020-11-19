@@ -39,27 +39,33 @@ client.on('message', (message) => {
         mangaName = args[0]
         const mangaUpdatesRSS = 'https://www.mangaupdates.com/rss.php';
         const DOMParser = new JSDOM.JSDOM('').window.DOMParser;
-        const parser = new DOMParser;
-        fetch(mangaUpdatesRSS)
-        .then(response => response.text())
-        .then(str => parser.parseFromString(str, "text/xml"))
-        .then(data => {
-          const links = data.getElementsByTagName('link');
-          for(i = 1; i < links.length; i++) {
-            if(args[0] in mangaDict) {
-              if(links[i].textContent === mangaDict[args[0]]) {
-                message.reply(`A new chapter of \`${args[0]}\` has been released.`);
+        fetch(mangaUpdatesRSS, {
+          method: 'GET',
+          headers: {'If-Modified-Since': new Date().toUTCString()}
+        })
+        .then(res => {
+          console.log(res.status);
+          res.text().then((htmlTxt) => {
+            var parser = new DOMParser();
+            let doc = parser.parseFromString(htmlTxt, 'text/xml');
+            var items = doc.querySelectorAll('item');
+            for(i = 0; i < items.length; i++) {
+              var mangaLink = items[i].querySelector('link').textContent;
+              if(mangaName in mangaDict) {
+                if(mangaLink === mangaDict[mangaName]) {
+                  message.reply(`A new chapter of \`${mangaName}\` has been released.`);
+                  return;
+                }
+              } else {
+                message.reply(`\`${args[0]}\` not found in manga dictionary.`);
                 return;
               }
-            } else {
-              message.reply(`\`${args[0]}\` not found in manga dictionary.`);
-              return;
             }
-          }
-          message.reply(`No new chapter of \`${args[0]}\` has been released.`);
-        });
+            message.reply(`No new chapter of \`${args[0]}\` has been released.`);
+            })
+          }).catch(() => console.error('Error in fetching the website.'));
       } else {
-        message.channel.send('Invalid command. The command format should be: `$check <manga-name>`')
+        message.channel.send('Invalid command. The command format should be: `$check <manga-name>`');
       }
     }
   }
