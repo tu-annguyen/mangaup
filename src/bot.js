@@ -25,7 +25,7 @@ client.on('message', (message) => {
     if (CMD_NAME === 'add') {
       if (args.length === 2) {
         // Edit regex to limit only to mangaupdates.com/series.html?id=
-        if (/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(args[1])) {
+        if (/https:\/\/www\.mangaupdates\.com\/series\.html\?id=[0-9]{5,}/.test(args[1])) {
           if (!(args[0] in mangaDict)) {
             mangaDict[args[0]] = args[1];
             message.reply(`Added \`${args[0]}\` to manga dictionary.`);
@@ -36,7 +36,7 @@ client.on('message', (message) => {
     
     if (CMD_NAME === 'check') {
       if (args.length === 1) {
-        mangaName = args[0]
+        mangaName = args[0];
         const mangaUpdatesRSS = 'https://www.mangaupdates.com/rss.php';
         const DOMParser = new JSDOM.JSDOM('').window.DOMParser;
         fetch(mangaUpdatesRSS, {
@@ -45,6 +45,7 @@ client.on('message', (message) => {
         })
         .then(res => {
           console.log(res.status);
+          console.log(new Date().toUTCString());
           res.text().then((htmlTxt) => {
             var parser = new DOMParser();
             let doc = parser.parseFromString(htmlTxt, 'text/xml');
@@ -66,6 +67,17 @@ client.on('message', (message) => {
           }).catch(() => console.error('Error in fetching the website.'));
       } else {
         message.channel.send('Invalid command. The command format should be: `$check <manga-name>`');
+      }
+    }
+
+    if (CMD_NAME === 'alert') {
+      if(args.length === 1) {
+        link = args[0]
+        if(/https:\/\/www\.mangaupdates\.com\/series\.html\?id=[0-9]{5,}/.test(link)) {
+          console.log('alerting')
+        }
+      } else {
+        message.channel.send('Invalid command. The command format should be: `$alert https://www.mangaupdates.com/series.html?id=<mangaupdates-ID>`');
       }
     }
   }
